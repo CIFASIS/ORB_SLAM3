@@ -1,0 +1,11 @@
+Dockerfile
+.dockerignore
+README.md
+.git/*
+Examples/Stereo-Inertial/rosario_dataset/*
+Examples/ROS/ORB_SLAM3/launch/*
+evaluation/*
+Thirdparty/DBoW2/build/*
+Thirdparty/g2o/build/*
+build/*
+outputs/*
