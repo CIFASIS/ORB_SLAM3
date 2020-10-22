@@ -28,6 +28,9 @@
 #include<ros/ros.h>
 #include<cv_bridge/cv_bridge.h>
 #include<sensor_msgs/Imu.h>
+#include <nav_msgs/Odometry.h>
+#include <tf2/LinearMath/Matrix3x3.h>
+#include <tf2/LinearMath/Quaternion.h>
 
 #include<opencv2/core/core.hpp>
 
@@ -35,6 +38,9 @@
 #include"../include/ImuTypes.h"
 
 using namespace std;
+
+ros::Publisher pub_odometry;
+std::string map_frame_id, base_link_frame_id;
 
 class ImuGrabber
 {
@@ -92,12 +98,15 @@ int main(int argc, char **argv)
       bEqual = true;
   }
 
+  n.param<std::string>("map_frame_id", map_frame_id,"/map");
+  n.param<std::string>("base_link_frame_id", base_link_frame_id,"/base_link");
+
   // Create SLAM system. It initializes all system threads and gets ready to process frames.
   ORB_SLAM3::System SLAM(argv[1],argv[2],ORB_SLAM3::System::IMU_STEREO,true);
 
   ImuGrabber imugb;
   ImageGrabber igb(&SLAM,&imugb,sbRect == "true",bEqual);
-  
+
     if(igb.do_rectify)
     {      
         // Load settings related to stereo calibration
@@ -141,10 +150,21 @@ int main(int argc, char **argv)
   ros::Subscriber sub_imu = n.subscribe("/imu", 1000, &ImuGrabber::GrabImu, &imugb); 
   ros::Subscriber sub_img_left = n.subscribe("/camera/left/image_raw", 100, &ImageGrabber::GrabImageLeft,&igb);
   ros::Subscriber sub_img_right = n.subscribe("/camera/right/image_raw", 100, &ImageGrabber::GrabImageRight,&igb);
+  pub_odometry = n.advertise<nav_msgs::Odometry>("/odometry", 1);
 
   std::thread sync_thread(&ImageGrabber::SyncWithImu,&igb);
 
   ros::spin();
+
+  // Stop all threads
+  SLAM.Shutdown();
+
+  // Save camera trajectory
+  SLAM.SaveKeyFrameTrajectoryTUM("KeyFrameTrajectory_TUM_Format.txt");
+  SLAM.SaveTrajectoryTUM("FrameTrajectory_TUM_Format.txt");
+  SLAM.SaveTrajectoryKITTI("FrameTrajectory_KITTI_Format.txt");
+
+  ros::shutdown();
 
   return 0;
 }
@@ -267,7 +287,43 @@ void ImageGrabber::SyncWithImu()
         cv::remap(imRight,imRight,M1r,M2r,cv::INTER_LINEAR);
       }
 
-      mpSLAM->TrackStereo(imLeft,imRight,tImLeft,vImuMeas);
+      cv::Mat current_pose;
+      current_pose = mpSLAM->TrackStereo(imLeft,imRight,tImLeft,vImuMeas);
+
+      if (!current_pose.empty()) {
+        cv::Mat R = current_pose(cv::Rect(0,0,3,3));
+        cv::Mat t = current_pose(cv::Rect(3,0,1,3));
+
+        cv::Mat p = -R.t() * t;
+        cv::Mat O = R.t();
+
+        tf2::Matrix3x3 Rcw(
+          O.at<float>(0,0), O.at<float>(0,1),O.at<float>(0,2),
+          O.at<float>(1,0), O.at<float>(1,1), O.at<float>(1,2),
+          O.at<float>(2,0), O.at<float>(2,1), O.at<float>(2,2)
+        );
+
+        tf2::Quaternion Qcw;
+        Rcw.getRotation(Qcw);
+
+        nav_msgs::Odometry odometry;
+
+        odometry.header.frame_id = map_frame_id;
+        odometry.header.stamp = ros::Time::now();
+        odometry.child_frame_id = base_link_frame_id;
+
+        odometry.pose.pose.orientation.x = Qcw.x();
+        odometry.pose.pose.orientation.y = Qcw.y();
+        odometry.pose.pose.orientation.z = Qcw.z();
+        odometry.pose.pose.orientation.w = Qcw.w();
+
+        odometry.pose.pose.position.x = p.at<float>(0);
+        odometry.pose.pose.position.y = p.at<float>(1);
+        odometry.pose.pose.position.z = p.at<float>(2);
+
+        pub_odometry.publish(odometry);
+
+      }
 
       std::chrono::milliseconds tSleep(1);
       std::this_thread::sleep_for(tSleep);
