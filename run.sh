@@ -17,7 +17,7 @@ CURRENT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 function echoUsage()
 {
-    echo -e "Usage: ./run_basalt.sh   -d | -v [detached] [-l LAUNCHFILE] | -b [-h]  \n\
+    echo -e "Usage: ./run.sh   -d | -v [detached] [-l LAUNCHFILE] | -b [-h]  \n\
                   \t -d dev mode \n\
                   \t -v vis mode \n\
                   \t\t 'detached' to run in background \n\
