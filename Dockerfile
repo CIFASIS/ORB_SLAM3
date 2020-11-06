@@ -29,9 +29,10 @@ COPY ./ ./src/ORB_SLAM3
 RUN cd ./src/ORB_SLAM3 && \
     chmod +x build.sh && \
     ./build.sh && \
-    echo "export ROS_PACKAGE_PATH=/opt/ros/melodic/share:${CATKIN_WS}/src/ORB_SLAM3/Examples/ROS" >> ~/.bashrc && \
+    sed -i '/exec "$@"/i export \
+    ROS_PACKAGE_PATH=/opt/ros/melodic/share:${CATKIN_WS}/src/ORB_SLAM3/Examples/ROS' /ros_entrypoint.sh && \
     chmod +x build_ros.sh && \
-    /bin/bash -c "source /opt/ros/melodic/setup.bash && export ROS_PACKAGE_PATH=/opt/ros/melodic/share:${CATKIN_WS}/src/ORB_SLAM3/Examples/ROS && ./build_ros.sh"
+    /ros_entrypoint.sh ./build_ros.sh
 
 # Define CMD
-CMD /bin/bash -c "export ROS_PACKAGE_PATH=/opt/ros/melodic/share:${CATKIN_WS}/src/ORB_SLAM3/Examples/ROS && roslaunch ORB_SLAM3 orbslam3.launch"
+#CMD roslaunch ORB_SLAM3 orbslam3.launch

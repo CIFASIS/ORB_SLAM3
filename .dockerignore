@@ -9,3 +9,4 @@ Thirdparty/DBoW2/build/*
 Thirdparty/g2o/build/*
 build/*
 outputs/*
+run*

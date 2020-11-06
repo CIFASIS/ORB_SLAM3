@@ -214,7 +214,7 @@ Once ORB-SLAM3 has loaded the vocabulary, press space in the rosbag tab.
 Being in the ORB-SLAM3 directory, to build the image execute this:
 
 ```bash
-docker build --rm --tag ros:orbslam3 -f ./Dockerfile .
+docker build --rm --tag ros:orbslam3 .
 ```
 
 To run on the Rosario dataset:
