@@ -177,6 +177,8 @@ public:
 
     void ChangeDataset();
 
+    cv::Mat GetViewerImage(void);
+
     //void SaveAtlas(int type);
 
 private:

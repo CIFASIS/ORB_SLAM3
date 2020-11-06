@@ -26,6 +26,8 @@
 #include<mutex>
 
 #include<ros/ros.h>
+#include <image_transport/image_transport.h>
+#include <opencv2/highgui/highgui.hpp>
 #include<cv_bridge/cv_bridge.h>
 #include<sensor_msgs/Imu.h>
 #include <nav_msgs/Odometry.h>
@@ -40,6 +42,7 @@
 using namespace std;
 
 ros::Publisher pub_odometry;
+image_transport::Publisher pub_visualization;
 std::string map_frame_id, base_link_frame_id;
 
 class ImuGrabber
@@ -102,7 +105,7 @@ int main(int argc, char **argv)
   n.param<std::string>("base_link_frame_id", base_link_frame_id,"/base_link");
 
   // Create SLAM system. It initializes all system threads and gets ready to process frames.
-  ORB_SLAM3::System SLAM(argv[1],argv[2],ORB_SLAM3::System::IMU_STEREO,false);
+  ORB_SLAM3::System SLAM(argv[1],argv[2],ORB_SLAM3::System::IMU_STEREO,true);
 
   ImuGrabber imugb;
   ImageGrabber igb(&SLAM,&imugb,sbRect == "true",bEqual);
@@ -151,6 +154,8 @@ int main(int argc, char **argv)
   ros::Subscriber sub_img_left = n.subscribe("/camera/left/image_raw", 100, &ImageGrabber::GrabImageLeft,&igb);
   ros::Subscriber sub_img_right = n.subscribe("/camera/right/image_raw", 100, &ImageGrabber::GrabImageRight,&igb);
   pub_odometry = n.advertise<nav_msgs::Odometry>("/odometry", 1);
+  image_transport::ImageTransport it(n);
+  pub_visualization = it.advertise("/visualization", 1);
 
   std::thread sync_thread(&ImageGrabber::SyncWithImu,&igb);
 
@@ -287,8 +292,9 @@ void ImageGrabber::SyncWithImu()
         cv::remap(imRight,imRight,M1r,M2r,cv::INTER_LINEAR);
       }
 
-      cv::Mat current_pose;
+      cv::Mat current_pose, to_show;
       current_pose = mpSLAM->TrackStereo(imLeft,imRight,tImLeft,vImuMeas);
+      to_show = mpSLAM->GetViewerImage();
 
       if (!current_pose.empty()) {
         cv::Mat R = current_pose(cv::Rect(0,0,3,3));
@@ -323,6 +329,11 @@ void ImageGrabber::SyncWithImu()
 
         pub_odometry.publish(odometry);
 
+      }
+
+      if (!to_show.empty()) {
+        sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", to_show).toImageMsg();
+        pub_visualization.publish(msg);
       }
 
       std::chrono::milliseconds tSleep(1);

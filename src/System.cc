@@ -471,8 +471,10 @@ void System::Shutdown()
         usleep(5000);
     }
 
+    /*
     if(mpViewer)
         pangolin::BindToContext("ORB-SLAM2: Map Viewer");
+    */
 }
 
 
@@ -913,6 +915,11 @@ void System::ChangeDataset()
     }
 
     mpTracker->NewDataset();
+}
+
+cv::Mat System::GetViewerImage(void)
+{
+    return mpViewer->toShow_.clone();
 }
 
 /*void System::SaveAtlas(int type){

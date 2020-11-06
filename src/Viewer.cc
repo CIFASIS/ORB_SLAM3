@@ -132,6 +132,7 @@ void Viewer::Run()
     mbFinished = false;
     mbStopped = false;
 
+    /*
     pangolin::CreateWindowAndBind("ORB-SLAM3: Map Viewer",1024,768);
 
     // 3D Mouse handler requires depth testing to be enabled
@@ -154,7 +155,7 @@ void Viewer::Run()
     pangolin::Var<bool> menuReset("menu.Reset",false,false);
     pangolin::Var<bool> menuStepByStep("menu.Step By Step",false,true);  // false, true
     pangolin::Var<bool> menuStep("menu.Step",false,false);
-
+    
     // Define Camera Render Object (for view / scene browsing)
     pangolin::OpenGlRenderState s_cam(
                 pangolin::ProjectionMatrix(1024,768,mViewpointF,mViewpointF,512,389,0.1,1000),
@@ -183,9 +184,11 @@ void Viewer::Run()
     {
         menuShowGraph = true;
     }
+    */
 
     while(1)
     {
+        /*
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         mpMapDrawer->GetCurrentOpenGLCameraMatrix(Twc,Ow,Twwp);
@@ -237,12 +240,13 @@ void Viewer::Run()
         {
             menuTopView = false;
             bCameraView = false;
-            /*s_cam.SetProjectionMatrix(pangolin::ProjectionMatrix(1024,768,3000,3000,512,389,0.1,1000));
-            s_cam.SetModelViewMatrix(pangolin::ModelViewLookAt(0,0.01,10, 0,0,0,0.0,0.0, 1.0));*/
+            //s_cam.SetProjectionMatrix(pangolin::ProjectionMatrix(1024,768,3000,3000,512,389,0.1,1000));
+            //s_cam.SetModelViewMatrix(pangolin::ModelViewLookAt(0,0.01,10, 0,0,0,0.0,0.0, 1.0));
             s_cam.SetProjectionMatrix(pangolin::ProjectionMatrix(1024,768,3000,3000,512,389,0.1,10000));
             s_cam.SetModelViewMatrix(pangolin::ModelViewLookAt(0,0.01,50, 0,0,0,0.0,0.0, 1.0));
             s_cam.Follow(Ow);
         }
+        */
 
         /*if(menuSideView && mpMapDrawer->mpAtlas->isImuInitialized())
         {
@@ -251,7 +255,7 @@ void Viewer::Run()
             s_cam.Follow(Twwp);
         }*/
 
-
+        /*
         if(menuLocalizationMode && !bLocalizationMode)
         {
             mpSystem->ActivateLocalizationMode();
@@ -289,7 +293,7 @@ void Viewer::Run()
         if(menuShowPoints)
             mpMapDrawer->DrawMapPoints();
 
-        pangolin::FinishFrame();
+        pangolin::FinishFrame();*/
 
         cv::Mat toShow;
         cv::Mat im = mpFrameDrawer->DrawFrame(true);
@@ -302,9 +306,10 @@ void Viewer::Run()
             toShow = im;
         }
 
-        cv::imshow("ORB-SLAM3: Current Frame",toShow);
-        cv::waitKey(mT);
-
+        //cv::imshow("ORB-SLAM3: Current Frame",toShow);
+        //cv::waitKey(mT);
+        toShow_ = toShow.clone();
+        /*
         if(menuReset)
         {
             menuShowGraph = true;
@@ -320,7 +325,7 @@ void Viewer::Run()
             //mpSystem->Reset();
             mpSystem->ResetActiveMap();
             menuReset = false;
-        }
+        }*/
 
         if(Stop())
         {

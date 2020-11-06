@@ -20,6 +20,8 @@
 #ifndef VIEWER_H
 #define VIEWER_H
 
+#include<opencv2/core/core.hpp>
+
 #include "FrameDrawer.h"
 #include "MapDrawer.h"
 #include "Tracking.h"
@@ -59,6 +61,7 @@ public:
     void SetTrackingPause();
 
     bool both;
+    cv::Mat toShow_;
 private:
 
     bool ParseViewerParamFile(cv::FileStorage &fSettings);
