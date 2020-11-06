@@ -22,7 +22,7 @@ function echoUsage()
                   \t -v vis mode \n\
                   \t\t 'detached' to run in background \n\
                   \t\t -l <NAME_OF_LAUNCHFILE> to run a specific launch file. \n\
-                  \t\t\t It must be placed in basalt_ros1/launch/ \n\
+                  \t\t\t It must be placed in launch/ \n\
                   \t -b build image \n\
                   \t -h help" >&2
 }
@@ -88,16 +88,16 @@ fi
 if [ $VIS_MODE -eq 1 ] ; then
   if [ $DETACHED -eq 1 ] ; then
     docker run -d --net=host \
-       -v $CURRENT_DIR/Examples/Stereo-Inertial/rosario_dataset:/root/catkin_ws/src/ORB_SLAM3/Examples/Stereo-Inertial/rosario_dataset:ro \
-        -v $CURRENT_DIR/Examples/ROS/ORB_SLAM3/launch:/root/catkin_ws/src/ORB_SLAM3/Examples/ROS/ORB_SLAM3/launch:ro \
-       ros:orbslam3 \
-       roslaunch ORB_SLAM3 $LAUNCH_FILE
+      -v $CURRENT_DIR/Examples/Stereo-Inertial/rosario_dataset:/root/catkin_ws/src/ORB_SLAM3/Examples/Stereo-Inertial/rosario_dataset:ro \
+      -v $CURRENT_DIR/Examples/ROS/ORB_SLAM3/launch:/root/catkin_ws/src/ORB_SLAM3/Examples/ROS/ORB_SLAM3/launch:ro \
+      ros:orbslam3 \
+      roslaunch ORB_SLAM3 $LAUNCH_FILE
   else
     docker run --net=host \
-       -v $CURRENT_DIR/Examples/Stereo-Inertial/rosario_dataset:/root/catkin_ws/src/ORB_SLAM3/Examples/Stereo-Inertial/rosario_dataset:ro \
-        -v $CURRENT_DIR/Examples/ROS/ORB_SLAM3/launch:/root/catkin_ws/src/ORB_SLAM3/Examples/ROS/ORB_SLAM3/launch:ro \
-       ros:orbslam3 \
-       roslaunch ORB_SLAM3 $LAUNCH_FILE
+      -v $CURRENT_DIR/Examples/Stereo-Inertial/rosario_dataset:/root/catkin_ws/src/ORB_SLAM3/Examples/Stereo-Inertial/rosario_dataset:ro \
+      -v $CURRENT_DIR/Examples/ROS/ORB_SLAM3/launch:/root/catkin_ws/src/ORB_SLAM3/Examples/ROS/ORB_SLAM3/launch:ro \
+      ros:orbslam3 \
+      roslaunch ORB_SLAM3 $LAUNCH_FILE
   fi
 fi
 
