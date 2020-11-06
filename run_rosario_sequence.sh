@@ -19,7 +19,7 @@ function echoUsage()
 }
 
 RUN_CONTAINER=0
-OUTPUT_FILE="orbslam3_$(date '+%Y%m%d_%H%M%S').txt"
+OUTPUT_FILE=$CURRENT_DIR/outputs/orbslam3_$(date '+%Y%m%d_%H%M%S').txt
 while getopts "hro:" opt; do
     case "$opt" in
         h)  echoUsage
