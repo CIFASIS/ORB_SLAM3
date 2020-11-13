@@ -49,3 +49,4 @@ cmake-build-debug/
 *.osa
 
 outputs/*
+ORB_SLAM3_src*
