@@ -83,11 +83,11 @@ Clone the repository:
 git clone https://github.com/UZ-SLAMLab/ORB_SLAM3.git ORB_SLAM3
 ```
 
-We provide a script `build.sh` to build the *Thirdparty* libraries and *ORB-SLAM3*. Please make sure you have installed all required dependencies (see section 2). Execute:
+We provide a script `build_orbslam3.sh` to build the *Thirdparty* libraries and *ORB-SLAM3*. Please make sure you have installed all required dependencies (see section 2). Execute:
 ```
 cd ORB_SLAM3
-chmod +x build.sh
-./build.sh
+chmod +x build_orbslam3.sh
+./build_orbslam3.sh
 ```
 
 This will create **libORB_SLAM3.so**  at *lib* folder and the executables in *Examples* folder.

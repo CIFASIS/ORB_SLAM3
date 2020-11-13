@@ -1,31 +1,10 @@
-echo "Configuring and building Thirdparty/DBoW2 ..."
+#!/bin/bash
 
-cd Thirdparty/DBoW2
-mkdir build
-cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release
-make -j
+CURRENT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
-cd ../../g2o
+cd $CURRENT_DIR
 
-echo "Configuring and building Thirdparty/g2o ..."
-
-mkdir build
-cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release
-make -j
-
-cd ../../../
-
-echo "Uncompress vocabulary ..."
-
-cd Vocabulary
-tar -xf ORBvoc.txt.tar.gz
-cd ..
-
-echo "Configuring and building ORB_SLAM3 ..."
-
-mkdir build
-cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release
-make -j
+chmod +x build_orbslam3.sh
+./build_orbslam3.sh
+chmod +x build_ros.sh
+/ros_entrypoint.sh ./build_ros.sh

@@ -27,8 +27,8 @@ COPY ./ ./src/ORB_SLAM3
 
 # Build SLAM system
 RUN cd ./src/ORB_SLAM3 && \
-    chmod +x build.sh && \
-    ./build.sh && \
+    chmod +x build_orbslam3.sh && \
+    ./build_orbslam3.sh && \
     sed -i '/exec "$@"/i export \
     ROS_PACKAGE_PATH=/opt/ros/melodic/share:${CATKIN_WS}/src/ORB_SLAM3/Examples/ROS' /ros_entrypoint.sh && \
     chmod +x build_ros.sh && \
