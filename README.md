@@ -214,13 +214,13 @@ Once ORB-SLAM3 has loaded the vocabulary, press space in the rosbag tab.
 Being in the ORB-SLAM3 directory, to build the image execute this:
 
 ```bash
-docker build --rm --tag ros:orbslam3 .
+docker build --rm --tag orbslam3:ros_melodic .
 ```
 
 To run on the Rosario dataset:
 
 ```bash
-docker run --rm -it --net=host --volume="`pwd`/Examples/Stereo-Inertial/rosario_dataset:/root/catkin_ws/src/ORB_SLAM3/Examples/Stereo-Inertial/rosario_dataset:ro" --volume="`pwd`/Examples/ROS/ORB_SLAM3/launch:/root/catkin_ws/src/ORB_SLAM3/Examples/ROS/ORB_SLAM3/launch:ro" ros:orbslam3
+docker run --rm -it --net=host --volume="`pwd`/Examples/Stereo-Inertial/rosario_dataset:/root/catkin_ws/src/ORB_SLAM3/Examples/Stereo-Inertial/rosario_dataset:ro" --volume="`pwd`/Examples/ROS/ORB_SLAM3/launch:/root/catkin_ws/src/ORB_SLAM3/Examples/ROS/ORB_SLAM3/launch:ro" orbslam3:ros_melodic
 ```
 
 Then launch visualization (`rviz -d rviz/orbslam3.rviz &`) and play some sequence (`rosbag play --pause --clock path/to/sequence04.bag`).
