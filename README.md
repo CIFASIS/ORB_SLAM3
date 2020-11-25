@@ -220,7 +220,7 @@ docker build --rm --tag orbslam3:ros_melodic .
 To run on the Rosario dataset:
 
 ```bash
-docker run --rm -it --net=host --volume="`pwd`/Examples/Stereo-Inertial/rosario_dataset:/root/catkin_ws/src/ORB_SLAM3/Examples/Stereo-Inertial/rosario_dataset:ro" --volume="`pwd`/Examples/ROS/ORB_SLAM3/launch:/root/catkin_ws/src/ORB_SLAM3/Examples/ROS/ORB_SLAM3/launch:ro" orbslam3:ros_melodic
+docker run --rm -it --net=host -v "`pwd`/Examples/Stereo-Inertial/rosario_dataset:/root/catkin_ws/src/ORB_SLAM3/Examples/Stereo-Inertial/rosario_dataset:ro" -v "`pwd`/Examples/ROS/ORB_SLAM3/launch:/root/catkin_ws/src/ORB_SLAM3/Examples/ROS/ORB_SLAM3/launch:ro" orbslam3:ros_melodic
 ```
 
 Then launch visualization (`rviz -d rviz/orbslam3.rviz &`) and play some sequence (`rosbag play --pause --clock path/to/sequence04.bag`).
