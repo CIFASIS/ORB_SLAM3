@@ -58,7 +58,7 @@ public:
 class ImageGrabber
 {
 public:
-    ImageGrabber(ORB_SLAM3::System* pSLAM, ImuGrabber *pImuGb, const bool bRect, const bool bClahe): mpSLAM(pSLAM), mpImuGb(pImuGb), do_rectify(bRect), mbClahe(bClahe){}
+    ImageGrabber(ORB_SLAM3::System* pSLAM, ImuGrabber *pImuGb, const bool bRect, const bool bClahe): mpSLAM(pSLAM), mpImuGb(pImuGb), do_rectify(bRect), mbClahe(bClahe), frame_count_(0) {}
 
     void GrabImageLeft(const sensor_msgs::ImageConstPtr& msg);
     void GrabImageRight(const sensor_msgs::ImageConstPtr& msg);
@@ -76,6 +76,7 @@ public:
 
     const bool mbClahe;
     cv::Ptr<cv::CLAHE> mClahe = cv::createCLAHE(3.0, cv::Size(8, 8));
+    size_t frame_count_;
 };
 
 
@@ -164,6 +165,7 @@ int main(int argc, char **argv)
   // Stop all threads
   SLAM.Shutdown();
 
+  std::cout << "frame_count_: " << igb.frame_count_ << std::endl;
   // Save camera trajectory
   SLAM.SaveKeyFrameTrajectoryTUM("KeyFrameTrajectory_TUM_Format.txt");
   SLAM.SaveTrajectoryTUM("FrameTrajectory_TUM_Format.txt");
@@ -294,6 +296,7 @@ void ImageGrabber::SyncWithImu()
 
       cv::Mat current_pose, to_show;
       current_pose = mpSLAM->TrackStereo(imLeft,imRight,tImLeft,vImuMeas);
+      frame_count_++;
       to_show = mpSLAM->GetViewerImage();
 
       if (!current_pose.empty()) {
