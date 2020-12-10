@@ -52,7 +52,7 @@ function cleanup() {
   if [ -n "${CID}" ] ; then
     printf "\e[31m%s %s\e[m\n" "Cleaning"
     docker stop $CID > /dev/null
-    docker logs $CID > $(dirname $OUTPUT_FILE)/$(basename -s .txt $OUTPUT_FILE)_log.txt
+    docker logs $CID > $(dirname $OUTPUT_FILE)/$(basename $OUTPUT_FILE .txt)_log.txt
     docker rm $CID > /dev/null
     unset CID
   fi
