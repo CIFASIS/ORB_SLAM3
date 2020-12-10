@@ -1,12 +1,9 @@
-# Define parent image
 FROM ros:melodic-perception
 
-# Set environment and working directory
-ENV CATKIN_WS=/root/catkin_ws
-WORKDIR $CATKIN_WS
-ENV DEBIAN_FRONTEND noninteractive
+ENV CATKIN_WS=/root/catkin_ws \
+    ORBSLAM3_ROOT=/root/catkin_ws/src/ORB_SLAM3/ \
+    DEBIAN_FRONTEND=noninteractive
 
-# Install dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends apt-utils && \
     apt-get install -y \
     python-pip \
@@ -22,19 +19,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends apt-utils && \
     cmake .. && \
     cmake --build .
 
-# Copy files
-COPY ./ ./src/ORB_SLAM3
+COPY . $ORBSLAM3_ROOT
+COPY ./scripts $CATKIN_WS
 
-# Build SLAM system
-RUN cd ./src/ORB_SLAM3 && \
-    chmod +x build_orbslam3.sh && \
-    sync && \
-    ./build_orbslam3.sh && \
-    sed -i '/exec "$@"/i export \
-    ROS_PACKAGE_PATH=/opt/ros/melodic/share:${CATKIN_WS}/src/ORB_SLAM3/Examples/ROS' /ros_entrypoint.sh && \
-    chmod +x build_ros.sh && \
-    sync && \
-    /ros_entrypoint.sh ./build_ros.sh
+WORKDIR $CATKIN_WS
 
-# Define CMD
+RUN /bin/bash -c "chmod +x build.sh && chmod +x modify_entrypoint.sh && sync && ./modify_entrypoint.sh && ./build.sh"
+
 #CMD roslaunch ORB_SLAM3 orbslam3.launch

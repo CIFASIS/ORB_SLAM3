@@ -1,5 +1,6 @@
 echo "Configuring and building Thirdparty/DBoW2 ..."
 
+cd $ORBSLAM3_ROOT
 cd Thirdparty/DBoW2
 mkdir build
 cd build
