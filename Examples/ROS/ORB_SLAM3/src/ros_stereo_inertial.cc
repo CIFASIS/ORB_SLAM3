@@ -38,6 +38,7 @@
 
 #include"../../../include/System.h"
 #include"../include/ImuTypes.h"
+#include "timestamps_logger.h"
 
 using namespace std;
 
@@ -58,7 +59,7 @@ public:
 class ImageGrabber
 {
 public:
-    ImageGrabber(ORB_SLAM3::System* pSLAM, ImuGrabber *pImuGb, const bool bRect, const bool bClahe): mpSLAM(pSLAM), mpImuGb(pImuGb), do_rectify(bRect), mbClahe(bClahe), frame_count_(0) {}
+    ImageGrabber(ORB_SLAM3::System* pSLAM, ImuGrabber *pImuGb, const bool bRect, const bool bClahe): mpSLAM(pSLAM), mpImuGb(pImuGb), do_rectify(bRect), mbClahe(bClahe), frame_count_(0), input("input.csv"), output("output.csv") {}
 
     void GrabImageLeft(const sensor_msgs::ImageConstPtr& msg);
     void GrabImageRight(const sensor_msgs::ImageConstPtr& msg);
@@ -77,6 +78,7 @@ public:
     const bool mbClahe;
     cv::Ptr<cv::CLAHE> mClahe = cv::createCLAHE(3.0, cv::Size(8, 8));
     size_t frame_count_;
+    TimestampsLogger input, output;
 };
 
 
@@ -256,6 +258,7 @@ void ImageGrabber::SyncWithImu()
       if(tImLeft>mpImuGb->imuBuf.back()->header.stamp.toSec())
           continue;
 
+      input.Log();
       this->mBufMutexLeft.lock();
       imLeft = GetImage(imgLeftBuf.front());
       imgLeftBuf.pop();
@@ -332,6 +335,7 @@ void ImageGrabber::SyncWithImu()
 
         pub_odometry.publish(odometry);
 
+        output.Log();
       }
 
       if (!to_show.empty()) {
