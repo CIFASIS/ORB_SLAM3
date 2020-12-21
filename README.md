@@ -272,24 +272,3 @@ Once ORB-SLAM3 has loaded the vocabulary, press space in the rosbag tab.
   rosrun rosbag fastrebag.py dataset-room1_512_16.bag dataset-room1_512_16_small_chunks.bag
   ```
 
-# Docker and testing on the Rosario Dataset
-
-Being in the ORB-SLAM3 directory, to build the image execute this:
-
-```bash
-docker build --rm --tag orbslam3:ros_melodic .
-```
-
-To run on the Rosario dataset:
-
-```bash
-docker run --rm -it --net=host -v "`pwd`/Examples/Stereo-Inertial/rosario_dataset:/root/catkin_ws/src/ORB_SLAM3/Examples/Stereo-Inertial/rosario_dataset:ro" -v "`pwd`/Examples/ROS/ORB_SLAM3/launch:/root/catkin_ws/src/ORB_SLAM3/Examples/ROS/ORB_SLAM3/launch:ro" orbslam3:ros_melodic
-```
-
-Then launch visualization (`rviz -d rviz/orbslam3.rviz &`) and play some sequence (`rosbag play --pause --clock path/to/sequence04.bag`).
-
-To visualize the output after, it is neccesary to record the odometry topic (using [`pose_listener`](https://github.com/jcremona/pose_listener) it would be `rosrun pose_listener pose_listener _topic:=/odometry _type:=O`). Then it can be plotted with [evo](https://github.com/MichaelGrupp/evo):
-
-```bash
-evo_traj tum trajectory.txt --plot
-```
