@@ -26,15 +26,24 @@
 #include<mutex>
 
 #include<ros/ros.h>
+#include <image_transport/image_transport.h>
+#include <opencv2/highgui/highgui.hpp>
 #include<cv_bridge/cv_bridge.h>
 #include<sensor_msgs/Imu.h>
+#include <nav_msgs/Odometry.h>
+#include <tf2/LinearMath/Matrix3x3.h>
+#include <tf2/LinearMath/Quaternion.h>
 
 #include<opencv2/core/core.hpp>
 
 #include"../../../include/System.h"
 #include"../include/ImuTypes.h"
+#include "timestamps_logger.h"
 
 using namespace std;
+ros::Publisher pub_odometry;
+image_transport::Publisher pub_visualization;
+std::string map_frame_id, base_link_frame_id;
 
 class ImuGrabber
 {
@@ -49,7 +58,7 @@ public:
 class ImageGrabber
 {
 public:
-    ImageGrabber(ORB_SLAM3::System* pSLAM, ImuGrabber *pImuGb, const bool bClahe): mpSLAM(pSLAM), mpImuGb(pImuGb), mbClahe(bClahe){}
+    ImageGrabber(ORB_SLAM3::System* pSLAM, ImuGrabber *pImuGb, const bool bClahe): mpSLAM(pSLAM), mpImuGb(pImuGb), mbClahe(bClahe), input("input.csv"), output("output.csv"){}
 
     void GrabImage(const sensor_msgs::ImageConstPtr& msg);
     cv::Mat GetImage(const sensor_msgs::ImageConstPtr &img_msg);
@@ -63,6 +72,7 @@ public:
 
     const bool mbClahe;
     cv::Ptr<cv::CLAHE> mClahe = cv::createCLAHE(3.0, cv::Size(8, 8));
+    TimestampsLogger input, output;
 };
 
 
@@ -88,6 +98,9 @@ int main(int argc, char **argv)
       bEqual = true;
   }
 
+  n.param<std::string>("map_frame_id", map_frame_id,"/map");
+  n.param<std::string>("base_link_frame_id", base_link_frame_id,"/base_link");
+
   // Create SLAM system. It initializes all system threads and gets ready to process frames.
   ORB_SLAM3::System SLAM(argv[1],argv[2],ORB_SLAM3::System::IMU_MONOCULAR,true);
 
@@ -97,7 +110,9 @@ int main(int argc, char **argv)
   // Maximum delay, 5 seconds
   ros::Subscriber sub_imu = n.subscribe("/imu", 1000, &ImuGrabber::GrabImu, &imugb); 
   ros::Subscriber sub_img0 = n.subscribe("/camera/image_raw", 100, &ImageGrabber::GrabImage,&igb);
-
+  pub_odometry = n.advertise<nav_msgs::Odometry>("/odometry", 1);
+  image_transport::ImageTransport it(n);
+  pub_visualization = it.advertise("/visualization", 1);
   std::thread sync_thread(&ImageGrabber::SyncWithImu,&igb);
 
   ros::spin();
@@ -175,7 +190,50 @@ void ImageGrabber::SyncWithImu()
       if(mbClahe)
         mClahe->apply(im,im);
 
-      mpSLAM->TrackMonocular(im,tIm,vImuMeas);
+      cv::Mat current_pose, to_show;
+      current_pose = mpSLAM->TrackMonocular(im,tIm,vImuMeas);
+      // frame_count_++;
+      to_show = mpSLAM->GetViewerImage();
+
+      if (!current_pose.empty()) {
+        cv::Mat R = current_pose(cv::Rect(0,0,3,3));
+        cv::Mat t = current_pose(cv::Rect(3,0,1,3));
+
+        cv::Mat p = -R.t() * t;
+        cv::Mat O = R.t();
+
+        tf2::Matrix3x3 Rcw(
+          O.at<float>(0,0), O.at<float>(0,1),O.at<float>(0,2),
+          O.at<float>(1,0), O.at<float>(1,1), O.at<float>(1,2),
+          O.at<float>(2,0), O.at<float>(2,1), O.at<float>(2,2)
+        );
+
+        tf2::Quaternion Qcw;
+        Rcw.getRotation(Qcw);
+
+        nav_msgs::Odometry odometry;
+
+        odometry.header.frame_id = map_frame_id;
+        odometry.header.stamp = ros::Time::now() ;
+        odometry.child_frame_id = base_link_frame_id;
+
+        odometry.pose.pose.orientation.x = Qcw.x();
+        odometry.pose.pose.orientation.y = Qcw.y();
+        odometry.pose.pose.orientation.z = Qcw.z();
+        odometry.pose.pose.orientation.w = Qcw.w();
+
+        odometry.pose.pose.position.x = p.at<float>(0);
+        odometry.pose.pose.position.y = p.at<float>(1);
+        odometry.pose.pose.position.z = p.at<float>(2);
+
+        pub_odometry.publish(odometry);
+
+        output.Log();
+      }
+      if (!to_show.empty()) {
+        sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", to_show).toImageMsg();
+        pub_visualization.publish(msg);
+      }
     }
 
     std::chrono::milliseconds tSleep(1);
