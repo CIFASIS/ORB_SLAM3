@@ -23,6 +23,10 @@
 #include<chrono>
 
 #include<ros/ros.h>
+#include <nav_msgs/Odometry.h>
+#include <tf2/LinearMath/Matrix3x3.h>
+#include <tf2/LinearMath/Quaternion.h>
+#include <image_transport/image_transport.h>
 #include <cv_bridge/cv_bridge.h>
 #include <message_filters/subscriber.h>
 #include <message_filters/time_synchronizer.h>
@@ -33,6 +37,10 @@
 #include"../../../include/System.h"
 
 using namespace std;
+
+ros::Publisher pub_odometry;
+image_transport::Publisher pub_visualization;
+std::string map_frame_id, base_link_frame_id;
 
 class ImageGrabber
 {
@@ -105,10 +113,15 @@ int main(int argc, char **argv)
         cv::initUndistortRectifyMap(K_r,D_r,R_r,P_r.rowRange(0,3).colRange(0,3),cv::Size(cols_r,rows_r),CV_32F,igb.M1r,igb.M2r);
     }
 
-    ros::NodeHandle nh;
+    ros::NodeHandle nh("~");
 
     message_filters::Subscriber<sensor_msgs::Image> left_sub(nh, "/camera/left/image_raw", 1);
     message_filters::Subscriber<sensor_msgs::Image> right_sub(nh, "/camera/right/image_raw", 1);
+    nh.param<std::string>("map_frame_id", map_frame_id,"map");
+    nh.param<std::string>("base_link_frame_id", base_link_frame_id,"base_link");
+    pub_odometry = nh.advertise<nav_msgs::Odometry>("/odometry", 1);
+    image_transport::ImageTransport it(nh);
+    pub_visualization = it.advertise("/visualization", 1);
     typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::Image, sensor_msgs::Image> sync_pol;
     message_filters::Synchronizer<sync_pol> sync(sync_pol(10), left_sub,right_sub);
     sync.registerCallback(boost::bind(&ImageGrabber::GrabStereo,&igb,_1,_2));
@@ -152,18 +165,60 @@ void ImageGrabber::GrabStereo(const sensor_msgs::ImageConstPtr& msgLeft,const se
         ROS_ERROR("cv_bridge exception: %s", e.what());
         return;
     }
-
+    cv::Mat current_pose, to_show;
     if(do_rectify)
     {
         cv::Mat imLeft, imRight;
         cv::remap(cv_ptrLeft->image,imLeft,M1l,M2l,cv::INTER_LINEAR);
         cv::remap(cv_ptrRight->image,imRight,M1r,M2r,cv::INTER_LINEAR);
-        mpSLAM->TrackStereo(imLeft,imRight,cv_ptrLeft->header.stamp.toSec());
+        current_pose = mpSLAM->TrackStereo(imLeft,imRight,cv_ptrLeft->header.stamp.toSec());
     }
     else
     {
-        mpSLAM->TrackStereo(cv_ptrLeft->image,cv_ptrRight->image,cv_ptrLeft->header.stamp.toSec());
+        current_pose = mpSLAM->TrackStereo(cv_ptrLeft->image,cv_ptrRight->image,cv_ptrLeft->header.stamp.toSec());
     }
+    to_show = mpSLAM->GetViewerImage();
+
+      if (!current_pose.empty()) {
+        cv::Mat R = current_pose(cv::Rect(0,0,3,3));
+        cv::Mat t = current_pose(cv::Rect(3,0,1,3));
+
+        cv::Mat p = -R.t() * t;
+        cv::Mat O = R.t();
+
+        tf2::Matrix3x3 Rcw(
+          O.at<float>(0,0), O.at<float>(0,1),O.at<float>(0,2),
+          O.at<float>(1,0), O.at<float>(1,1), O.at<float>(1,2),
+          O.at<float>(2,0), O.at<float>(2,1), O.at<float>(2,2)
+        );
+
+        tf2::Quaternion Qcw;
+        Rcw.getRotation(Qcw);
+
+        nav_msgs::Odometry odometry;
+
+        odometry.header.frame_id = map_frame_id;
+        odometry.header.stamp = ros::Time::now();
+        odometry.child_frame_id = base_link_frame_id;
+
+        odometry.pose.pose.orientation.x = Qcw.x();
+        odometry.pose.pose.orientation.y = Qcw.y();
+        odometry.pose.pose.orientation.z = Qcw.z();
+        odometry.pose.pose.orientation.w = Qcw.w();
+
+        odometry.pose.pose.position.x = p.at<float>(0);
+        odometry.pose.pose.position.y = p.at<float>(1);
+        odometry.pose.pose.position.z = p.at<float>(2);
+
+        pub_odometry.publish(odometry);
+
+        //output.Log();
+      }
+
+      if (!to_show.empty()) {
+        sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", to_show).toImageMsg();
+        pub_visualization.publish(msg);
+      }
 
 }
 
