@@ -6,30 +6,30 @@
 Camera.type: "PinHole"
 
 # Camera calibration and distortion parameters (OpenCV)
-Camera.fx: 347.997559
-Camera.fy: 347.997559
-Camera.cx: 320.0
-Camera.cy: 240.0
+Camera.fx: 1043.992676 # 347.997559
+Camera.fy: 1043.992676 # 347.997559
+Camera.cx: 960.0 # 320.0
+Camera.cy: 540.0 # 240.0
 
 Camera.k1: 0.0
 Camera.k2: 0.0
 Camera.p1: 0.0
 Camera.p2: 0.0
 
-Camera.width: 640
-Camera.height: 480
+Camera.width: 1920
+Camera.height: 1080
 
 # Camera frames per second 
-Camera.fps: 30.0
+Camera.fps: 18.5
 
 # stereo baseline times fx
-Camera.bf: 17.39987795
+Camera.bf: 52.1996338 # 17.39987795
 
 # Color order of the images (0: BGR, 1: RGB. It is ignored if images are grayscale)
 Camera.RGB: 1
 
 # Close/Far threshold. Baseline times.
-ThDepth: 10000000.0
+ThDepth: 1000000.0
 
 # Transformation from camera 0 to body-frame (imu)
 Tbc: !!opencv-matrix
@@ -125,8 +125,8 @@ ORBextractor.nLevels: 8
 # Image is divided in a grid. At each cell FAST are extracted imposing a minimum response.
 # Firstly we impose iniThFAST. If no corners are detected we impose a lower value minThFAST
 # You can lower these values if your images have low contrast			
-ORBextractor.iniThFAST: 20
-ORBextractor.minThFAST: 7
+ORBextractor.iniThFAST: 20 #60
+ORBextractor.minThFAST: 7 #60
 
 #--------------------------------------------------------------------------------------------
 # Viewer Parameters
